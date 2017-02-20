@@ -1,0 +1,40 @@
+# Example Docker Compose file for Gitlab service
+
+postgresql:
+    image: "sameersbn/postgresql:9.4"
+    environment:
+        DB_NAME: "gitlab_xxxx"
+        DB_USER: "gitlab"
+        DB_PASS: "your_password"
+    volumes:
+        - /srv/work/_db/postgresql/data:/var/lib/postgresql
+
+redis:
+    image: "redis:latest"
+    
+gitlab:
+    image: "gitlab/gitlab-ce:latest"
+    ports:
+        - "10022:22"
+        - "10080:80"
+    links:
+        - redis:redisio
+        - postgresql:postgresql
+    volumes:
+        - /srv/work/_db/gitlab/data:/srv/git/data
+        - /srv/work/_db/gitlab/log:/var/log/gitlab
+        - /srv/work/_db/gitlab/config:/etc/gitlab
+    environment:
+        GITLAB_PORT: 10080
+        GITLAB_SSH: 10022
+        GITLAB_BACKUPS: "daily"
+        GITLAB_HOST: "gitlab.yourdomain.com"
+        GITLAB_SIGNUP: "true"
+        GITLAB_ROOT_PASSWORD: "your_password"
+        GITLAB_GRAVATAR_ENABLED: "true"
+        SMTP_ENABLED: "true"
+        SMTP_DOMAIN: "gmail.com"
+        SMTP_HOST: "smtp.gmail.com"
+        SMTP_PORT: 587
+        SMTP_STARTTLS: "true"
+
