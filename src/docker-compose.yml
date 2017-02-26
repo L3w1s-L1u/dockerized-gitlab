@@ -2,7 +2,7 @@ version: '2'
 
 services:
   dck_redis:
-    restart: always
+      #restart: always
     image: redis:latest
     command:
     - --loglevel warning
@@ -10,13 +10,16 @@ services:
     - /srv/docker/gitlab/redis:/var/lib/redis:Z
 
   dck_postgre:
-    restart: always
+      #restart: always
     # gitlab-ce's gitlab-rake backup (pg_dump) only suports 9.6-1
     image: sameersbn/postgresql:9.6-1
-    ports:
-    - "5432:5432"
+    #ports:
+    #- "5432:5432"
     volumes:
     - /srv/docker/gitlab/postgresql:/var/lib/postgresql:Z
+    # tunnel volume to pass postgresql bins to dck_gitlab
+    #- tunnel_bin:/usr/bin
+    #- tunnel_share:/usr/share
     environment:
     - DB_USER=gitlab_uas
     - DB_PASS=P@ssw0rd
@@ -26,7 +29,10 @@ services:
   dck_gitlab:
     #restart: always
     #image: sameersbn/gitlab:8.16.6
-    image: gitlab/gitlab-ce:latest
+    # updated psql and pg_dump command so gitlab-ce:8.17 can create backup of external postgresql of ver 9.6+
+    #image: localhost:5000/lewis/gitlab-ce:8.17-psql_updated
+    # updated cron utility for creating backup automatically at night
+    image: localhost:5000/lewis/gitlab-ce:8.17_cron_updated
     depends_on:
     - dck_redis
     - dck_postgre
@@ -37,8 +43,12 @@ services:
     volumes:
     - /srv/docker/gitlab/gitlab:/home/git/data:Z
     - /srv/docker/gitlab/config:/etc/gitlab
+    - /srv/docker/gitlab/postgresql/backups:/var/opt/gitlab/backups
     # folder external_backups used to store backups of external postgre database
-    - /srv/docker/gitlab/postgresql/backups:/var/opt/gitlab/external_backups
+    #- /srv/docker/gitlab/postgresql/backups:/var/opt/gitlab/external_backups
+    # tunnel volume to receive bins from dck_postgre
+    #- tunnel_bin:/var/opt/gitlab/postgre_usr/bin
+    #- tunnel_share:/var/opt/gitlab/postgre_usr/share
     environment:
     - DEBUG=true
 
@@ -157,4 +167,10 @@ services:
     - OAUTH_AZURE_API_KEY=
     - OAUTH_AZURE_API_SECRET=
     - OAUTH_AZURE_TENANT_ID=
+# Create a tunnel to pass data between two containers
+#volumes:
+#    tunnel_bin: {}
+#    tunnel_share: {}
+
+
 
